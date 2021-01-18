@@ -1,0 +1,104 @@
+//Air Station-1
+#include <PubSubClient.h>
+#include <DHT.h>
+#include <ESP8266WiFi.h>
+#include <PMS.h>
+#include <SoftwareSerial.h>
+
+#define DHTPIN D4 
+#define DHTTYPE DHT11
+
+SoftwareSerial pSerial(D2,D3);//RX,TX;接到pms模組上的TX,RX（相反）
+PMS pms(pSerial);
+PMS::DATA data;
+
+DHT dht(DHTPIN, DHTTYPE); 
+WiFiClient client;
+
+const char* ssid = "brown_kb102";
+const char* password = "!ncutkb102";
+const char* host = "140.128.87.192";
+const int port = 80;
+const char upstr[] = "{\"r\":\"OK\"}";
+const String url="/NCUTair/PushAQI?";//H=48.00&PM25=5&PM10=2&T=28.00&hid=999
+
+String urlstr="";
+String temp;  
+String hum;   
+String pm2;
+String pm10;
+ 
+void setup_wifi() {
+  delay(10);
+  WiFi.begin(ssid, password);
+  
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+ 
+  Serial.println("");
+  Serial.println("WiFi connected");
+}
+ 
+
+void setup() {
+  Serial.begin(115200);
+  dht.begin();
+  pSerial.begin(9600);
+  setup_wifi(); 
+  
+}
+
+void loop() { 
+  
+     if (pms.read(data)){
+      
+     pm2  = String(data.PM_AE_UG_2_5);
+     pm10 = String(data.PM_AE_UG_10_0); 
+     temp = String(dht.readTemperature());
+     hum  = String(dht.readHumidity());
+     Serial.println("pm2.5="+pm2);
+     Serial.println("pm10="+pm10);
+     Serial.println("temp="+temp);
+     Serial.println("hum="+hum);
+     urlstr=url+"H="+hum+"&PM25="+pm2+"&PM10="+pm10+"&T="+temp+"&hid=1";
+     Serial.println("urlstr="+urlstr);
+
+     Serial.print("connecting to ");
+     Serial.print(host);
+     Serial.print(':');
+     Serial.println(port);
+     
+     if (client.connect(host, port)) {
+     Serial.println("sending data to server");
+     String postRequest=
+     "GET " + urlstr ;
+    
+    client.println(postRequest);
+    Serial.println(postRequest);
+    delay(10);
+   
+    String line = client.readStringUntil('\n'); 
+    
+    while(line.length() != 0){ 
+    Serial.println(line); 
+     if(line.substring(0)==upstr){
+      Serial.println("send data sucess!");
+      break;
+     }
+    line = client.readStringUntil('\n'); 
+    }
+    
+    Serial.println("closing connection!");
+    client.stop();
+    }else{
+    Serial.println("connection failed");
+    delay(5000);
+    return;
+    }
+     urlstr = "";
+     delay(1800000);
+  }
+  
+}
