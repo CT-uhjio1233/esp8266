@@ -1,6 +1,6 @@
 //Air Station-1
-#include <PubSubClient.h>
-#include <DHT.h>
+#include <PubSubClient.h>                                                           
+#include <DHT.h>                                                                    
 #include <ESP8266WiFi.h>
 #include <PMS.h>
 #include <SoftwareSerial.h>
@@ -19,8 +19,8 @@ const char* ssid = "brown_kb102";
 const char* password = "!ncutkb102";
 const char* host = "140.128.87.192";
 const int port = 80;
-const char upstr[] = "{\"r\":\"OK\"}";
 const String url="/NCUTair/PushAQI?";//H=48.00&PM25=5&PM10=2&T=28.00&hid=999
+const char upstr[] = "{\"r\":\"OK\"}";
 
 String urlstr="";
 String temp;  
